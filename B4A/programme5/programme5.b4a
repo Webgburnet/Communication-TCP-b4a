@@ -1,0 +1,142 @@
+﻿Version=6.5
+NumberOfModules=0
+Build1=Default,B4A.ProfiLAB,Full
+Build2=ProfiLab,B4A.ProfiLAB,Full
+ManifestCode=
+IconFile=
+NumberOfFiles=5
+File1=Connection.bal
+File2=layout1.bal
+File3=menu.bal
+File4=MobivOrdi.bal
+File5=OrdivMobi.bal
+NumberOfLibraries=2
+Library1=core
+Library2=profilab_tcp
+@EndOfDesignText@
+#Region Module Attributes
+	#FullScreen: False
+	#IncludeTitle: False
+	#ApplicationLabel: Profilab.TCP
+	#VersionCode: 1
+	#VersionName: 
+	#SupportedOrientations: portrait
+	#CanInstallToExternalStorage: False
+#End Region
+
+Sub Process_Globals
+	'These global variables will be declared once when the application starts.
+	'These variables can be accessed from all modules.
+
+End Sub
+
+Sub Globals
+	Dim connect As Button
+	Dim curseur As SeekBar
+	Dim deconnect As Button
+	Dim Tx15 As ToggleButton
+	Dim Tx2 As ToggleButton
+	Dim valeur=0 As Double
+	Dim Tx8 As ToggleButton
+	Dim bar As ProgressBar
+	Dim Rx1 As Panel
+	Dim Rx6 As Panel
+	Private AdresseIP As EditText
+	Private MvO As Button
+	Private OvM As Button
+	Private Connectmenu As Button
+	Private retour As Button
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	'Activity.LoadLayout("Layout1")
+	Activity.LoadLayout("menu")
+	'connect.Visible=True
+	'deconnect.Visible=False
+End Sub
+
+Sub Activity_Resume
+
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+
+End Sub
+
+
+Sub deconnect_Click
+	Profilab_TCP.fin_connexion
+	connect.Visible=True
+	deconnect.Visible=False
+	
+End Sub
+Sub curseur_ValueChanged (Value As Int, UserChanged As Boolean)
+	Profilab_TCP.Emission(Value,0)
+End Sub
+Sub connect_Click
+	Dim Adressepc As String
+	Adressepc=AdresseIP.text
+	'Profilab_TCP.connexion("192.168.1.96","5500")
+	Profilab_TCP.connexion(Adressepc,"5500")
+End Sub
+
+Sub Profilab_tcp_connected (succes As Boolean)
+	If succes=True Then
+	connect.Visible=False
+	deconnect.Visible=True
+	End If
+End Sub
+
+Sub Tx15_CheckedChange(Checked As Boolean)
+	If Checked=True Then valeur=valeur+32768
+	If Checked=False Then valeur=valeur-32768
+	Profilab_TCP.Emission(valeur,1)
+End Sub
+
+Sub Tx2_CheckedChange(Checked As Boolean)
+	If Checked=True Then valeur=valeur+4
+	If Checked=False Then valeur=valeur-4
+	Profilab_TCP.Emission(valeur,1)
+End Sub
+
+Sub Tx8_CheckedChange(Checked As Boolean)
+	If Checked=True Then valeur=valeur+256
+	If Checked=False Then valeur=valeur-256
+	Profilab_TCP.Emission(valeur,1)
+End Sub
+
+Sub Profilab_tcp_newdata (buffer() As Byte) As transfert
+Dim recu As transfert
+recu=Profilab_TCP.reception(buffer)
+If recu.canal=0 Then bar.Progress=recu.valeur
+If recu.canal=1 Then
+	Dim binaire As String
+	binaire=Profilab_TCP.to_binary(recu.valeur)
+	If Profilab_TCP.test_bit(binaire,1,"1") Then Rx1.Color=Colors.Red
+	If Profilab_TCP.test_bit(binaire,1,"0") Then Rx1.Color=Colors.White
+	If Profilab_TCP.test_bit(binaire,6,"1") Then Rx6.Color=Colors.Red
+	If Profilab_TCP.test_bit(binaire,6,"0") Then Rx6.Color=Colors.white
+End If	
+End Sub
+
+Sub Connectmenu_Click
+	Activity.RemoveAllViews
+	Activity.LoadLayout("connection")
+End Sub
+
+Sub OvM_Click
+	Activity.RemoveAllViews
+	Activity.LoadLayout("ordivmobi")
+End Sub
+
+Sub MvO_Click
+	Activity.RemoveAllViews
+	Activity.LoadLayout("mobivordi")
+End Sub
+
+Sub retour_Click
+	Activity.RemoveAllViews
+	Activity.LoadLayout("menu")
+	connect.Visible=True
+	deconnect.Visible=False
+End Sub
